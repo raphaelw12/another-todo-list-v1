@@ -1,25 +1,232 @@
 <head>
-  <title>another-todo-list-v1</title>
+  <title>ToDo</title>
 </head>
 
 <body>
-  <h1>Welcome to Meteor!</h1>
-
-  {{> hello}}
-  {{> info}}
+  <div class="container-fluid">
+    {{> navBar}}
+    {{> main}}
+    {{> addTask}}
+  </div>
 </body>
 
-<template name="hello">
-  <button>Click Me</button>
-  <p>You've pressed the button {{counter}} times.</p>
+<template name="navBar">
+  <div class = "pos-f-t">
+    <div class="collapse" id="headerNavbarToggle">
+      <div class="p-4 ui">
+        <h5 class="text-white h4">To-Do List Manager</h5>
+        <span class="text-muted">Start managing your to-do lists efficiently and effectively today.</span>
+      </div>
+    </div>
+    <nav class="navbar navbar-dark ui">
+      <button class="ui-text navbar-toggler" type="button" data-toggle="collapse" data-target="#headerNavbarToggle" aria-controls="headerNavbarToggle" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <a class="text-white">{{>loginButtons}}</a>
+      <p class="text-white text-left">To-Do List Manager</p>
+    </nav>
+  </div>
 </template>
 
-<template name="info">
-  <h2>Learn Meteor!</h2>
-  <ul>
-    <li><a href="https://www.meteor.com/try" target="_blank">Do the Tutorial</a></li>
-    <li><a href="http://guide.meteor.com" target="_blank">Follow the Guide</a></li>
-    <li><a href="https://docs.meteor.com" target="_blank">Read the Docs</a></li>
-    <li><a href="https://forums.meteor.com" target="_blank">Discussions</a></li>
-  </ul>
+<template name="main"> 
+  <div class="main-body">
+    <div class="album py-5 ui-album">
+      <div class="row">
+        <!-- Tasks begin here -->
+        <div class="col">
+          <div class="ml-5 mr-5 card bg-light mb-3" style ="max-width: 80rem;">
+            <div class="card-header">
+              <div class="dropdown">
+                <b>Tasks</b><a href="#" class="dropdown-toggle text-muted" role="button" id="TaskDropDownMenu" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="float:right;"></a>
+                <div class="dropdown-menu" aria-labelledby="dropdownMenuLink">
+                  <a class="dropdown-item js-showall" href="#">Show all tasks</a>
+                  <a class="dropdown-item js-hcomptasks" href="#">Hide Completed Tasks</a>
+                  <a class="dropdown-item js-sortcomp" href="#">Sort by Completion</a>
+                  <a class="dropdown-item js-sortincomp" href="#">Sort by Incompletion</a>
+                </div>
+              </div>
+            </div>
+            {{#each TaskAll}}
+              <div id={{_id}}>
+                {{#if PrivateOwner}} <!-- If its a private task -->
+                  <div class="card-body task-list text-secondary">
+                    <div class="form-check card-text">
+                      {{#if SubTaskCheck}}
+                        <input class="form-check-input js-getcheck" type="checkbox" checked={{Status}} value="" id="taskCheck{{_id}}" disabled>
+                        <label class="form-check-label text-muted btn-link" role="button" data-toggle="modal" data-target="#taskInfoModal{{_id}}">
+                          <b>(Private)</b> {{TaskName}} ({{CompSubTask}}/{{SubTaskCount}})
+                        </label>
+                      {{else}}
+                        <input class="form-check-input js-getcheck" type="checkbox" checked={{Status}} value="" id="taskCheck{{_id}}">
+                        <label class="form-check-label text-muted btn-link" role="button" data-toggle="modal" data-target="#taskInfoModal{{_id}}">
+                          <b>(Private)</b> {{TaskName}}
+                        </label>
+                      {{/if}}
+                    </div>
+                  </div>
+                {{/if}}
+
+                {{#if PublicOwner}} <!-- If its a public task -->
+                  <div class="card-body task-list text-secondary">
+                    <div class="form-check card-text">
+                        {{#if SubTaskCheck}}
+                          <input class="form-check-input js-getcheck" type="checkbox" checked={{Status}} value="" id="taskCheck{{_id}}" disabled>
+                          <label class="form-check-label text-muted btn-link" role="button" data-toggle="modal" data-target="#taskInfoModal{{_id}}">
+                            {{TaskName}} ({{CompSubTask}}/{{SubTaskCount}})
+                          </label>
+                        {{else}}
+                          <input class="form-check-input js-getcheck" type="checkbox" checked={{Status}} value="" id="taskCheck{{_id}}">
+                          <label class="form-check-label text-muted btn-link" role="button" data-toggle="modal" data-target="#taskInfoModal{{_id}}">
+                            {{TaskName}}
+                          </label>
+                        {{/if}}
+                      </div>
+                    </div>
+                {{/if}}
+              </div>
+              
+              <div class="modal fade bd-example-modal-lg" id="taskInfoModal{{_id}}" tabindex="-1" role="dialog" aria-labelledby="taskInfoModal{{_id}}" aria-hidden="true">
+                <div class="modal-dialog modal-lg">
+                  <div class="modal-content">
+                    <div class="modal-header">
+                      <h5 class="modal-title" id="taskInfoModal{{_id}}"><b>{{TaskName}}</b></h5>
+                      <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                      </button>
+                    </div>
+                    <div class="modal-body">
+                      <div class="col"> 
+                        <div class="row">
+                          <b>Description</b>  
+                        </div>
+                        {{Desc}}
+                        {{#if currentUser}}
+                          <div class="row mt-2">
+                            <b>Task Status</b>
+                          </div>
+                          <div class="form-row align-items-center">
+                            <div class="col-auto my-1">
+                              <label class="mr-sm-2 sr-only" for="inlineFormCustomSelect">Task Status</label>
+                              <select class="custom-select mr-sm-2" id="setTaskStatus{{_id}}">
+                                <option selected value="1" >Public</option>
+                                <option value="0">Private</option>
+                              </select>
+                            </div>
+                            <div class="col-auto my-1">
+                              <button type="submit" class="btn btn-primary js-statuschange">Save</button> Current Status : {{CurrentStatus}}
+                            </div>
+                          </div>
+                          <div class="row mt-2">
+                            <button type="button" data-toggle="modal" data-target="#addSubTaskModal{{_id}}" class="text-muted btn btn-link"><i class="zmdi zmdi-plus"></i> Add a sub task</button>
+                          </div>
+                        {{/if}}
+                        {{#if SubTaskCheck}}
+                          <div class="row mt-2">
+                            <b>Sub tasks</b>
+                          </div>
+                          <div class="progress mb-2 mt-1" style="height: 10px;">
+                            <div class="progress-bar progress-bar-striped bg-success" role="progressbar" style="width: {{TaskSuccessRate}}%;" aria-valuenow="{{TaskSuccess}}" aria-valuemin="0" aria-valuemax="100"></div>
+                          </div>
+                            {{#each SubTaskAll}}
+                              <div id={{_id}} class="text-secondary">
+                                <div class="form-check card-text">
+                                  <input class="form-check-input js-getcheck" type="checkbox" checked={{Status}} value="" id="taskCheck{{_id}}">
+                                  <label class="form-check-label text-muted btn-link">
+                                    {{TaskName}}
+                                  </label> 
+                                  <a class="text-muted text-right" role="button" href="#" style="float: right;"><i class="zmdi zmdi-close js-delete"></i></a>
+                                </div>
+                              </div>
+                            {{/each}} 
+                        {{/if}}
+                      </div>
+                    </div>
+                    <div class="modal-footer">
+                      <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                      {{#if currentUser}}
+                        <button type="button" class="btn btn-secondary js-delete" data-dismiss="modal">Delete</button>
+                      {{/if}}
+                    </div>
+                  </div>
+                </div>                                
+              </div>
+              
+              <div class="modal fade bd-example-modal-lg" id="addSubTaskModal{{_id}}" tabindex="-1" role="dialog" aria-labelledby="addSubTaskModal{{_id}}" aria-hidden="true">
+                <div class="modal-dialog modal-lg">
+                  <div class="modal-content">
+                    <div class="modal-header">
+                      <h5 class="modal-title" id="addSubTaskModal{{_id}}">Add a new sub task</h5>
+                      <button type="button" class="close js-closeAddsubModal" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                      </button>
+                    </div>
+                    <div class="modal-body">
+                      <form>
+                        <div class="form-label-group">
+                          <input type="text" id="addTitle{{_id}}" class="form-control" placeholder="Enter a title for this task" required="" autofocus="">
+                          <label for="addTitle{{_id}}">Enter a title for this sub task</label>
+                        </div>
+
+                        <!-- <div class="form-label-group">
+                          <textarea type="text" id="addDesc{{_id}}" class="form-control" placeholder="Enter a description for this task" required="" autofocus="" style="height:200px;padding:12px 12px;"></textarea>
+                          <label for="addDesc{{_id}}">Enter a description for this sub task</label>
+                        </div> -->
+                      </form>
+                    </div>
+                    <div class="modal-footer">
+                      <button type="button" class="btn btn-secondary js-closeAddsubModal" data-dismiss="modal">Close</button>
+                      <button type="button" class="btn btn-primary js-savesub">Save Task</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            {{/each}}
+            <div class="card-footer text-muted">
+              {{#if currentUser}}
+                <button type="button" data-toggle="modal" data-target="#addTaskModal" class="text-muted btn btn-link"><i class="zmdi zmdi-plus"></i> Add another task</button>
+              {{else}}
+                <button type="button" class="text-muted btn btn-link" href="#">You must log in to add a task</button>
+              {{/if}}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </template>
+
+
+
+<template name = "addTask">
+  <div class="modal fade bd-example-modal-lg" id="addTaskModal" tabindex="-1" role="dialog" aria-labelledby="addTaskModal" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="addTaskModal">Add a new task</h5>
+          <button type="button" class="close js-closeAddModal" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <form>
+            <div class="form-label-group">
+              <input type="text" id="addTitle" class="form-control" placeholder="Enter a title for this task" required="" autofocus="">
+              <label for="addTitle">Enter a title for this task</label>
+            </div>
+
+            <div class="form-label-group">
+              <textarea type="text" id="addDesc" class="form-control" placeholder="Enter a description for this task" required="" autofocus="" style="height:200px;padding:12px 12px;"></textarea>
+              <label for="addDesc">Enter a description for this task</label>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary js-closeAddModal" data-dismiss="modal">Close</button>
+          <button type="button" class="btn btn-primary js-save">Save Task</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+
